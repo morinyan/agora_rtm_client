@@ -15,13 +15,67 @@ import {
 $(() => {
   M.AutoInit()
 
+  const dataList = [
+    {
+      'appId': 'd0f75f9c230446a1bff5353aa382b427',
+      'accountName': 'test_123',
+      'token': '006d0f75f9c230446a1bff5353aa382b427IAAfcVw5/7f9q8GUBHFUvR4xHlIRVkJL2bSpX14kN8ZUYBW/NfEAAAAAEADvbzn5hP/MYgEA6AOE/8xi',
+      'channelName': '1018011',
+      'channelMessage': 'ping by test_123',
+      'peerId': 'test_789',
+      'peerMessage': 'ping',
+      'memberId': '',
+      'width': 600,
+      'height': 500,
+    },
+    {
+      'appId': 'd0f75f9c230446a1bff5353aa382b427',
+      'accountName': 'test_789',
+      'token': '006d0f75f9c230446a1bff5353aa382b427IACHlvd0d8mrEDkYB9sxGl36K4IqF5PeB0aKpzlOCDjiWDPCgu8AAAAAEAAl8JqQgv7MYgEA6AOC/sxi',
+      'channelName': '1018011',
+      'channelMessage': 'ping by test_789',
+      'peerId': 'test_123',
+      'peerMessage': 'ping',
+      'memberId': '',
+      'width': 480,
+      'height': 400,
+    }
+  ];
+
+  let searchList = new URL(location.href).search.slice(1).split('&').map(s => s.split('='))
+
+  let inputData = [];
+
+  for(let item of searchList) {
+    if (item[0] === 'number') {
+      inputData = dataList[item[1]] || [];
+    }
+  }
+
+  let inputs = [...document.querySelectorAll('input[name]')];
+
+  for(let key in inputData) {
+    for(let dom of inputs) {
+      if (dom.name === key) {
+        dom.value = inputData[key];
+        break;
+      }
+    }
+  }
+
   const rtm = new RtmClient()
 
   const BoardBox = document.querySelector('#board_box');
+
+  Object.assign(BoardBox.style, {
+    width: inputData.width,
+    height: inputData.height,
+  });
+
   const board = new BoardWebClient({
     $el: BoardBox,
-    canvasW: BoardBox.clientWidth,
-    canvasH: BoardBox.clientHeight,
+    canvasW: inputData.width,
+    canvasH: inputData.height,
   })
 
   window.board = board;
@@ -30,7 +84,7 @@ $(() => {
     'move': (args) => {
       const params = serializeFormData('loginForm')
       console.log('observer::', { args, params });
-      rtm.client.sendMessageToPeer({ text: JSON.stringify(args) }, params.accountName === 'test_123' ? 'test_789': 'test_123');
+      rtm.client.sendMessageToPeer({ text: JSON.stringify({width: inputData.width, height: inputData.height, ...args}) }, params.peerId);
     }
   })
 
@@ -55,6 +109,7 @@ $(() => {
     console.log('MessageFromPeer::', { message, peerId });
     board.clearBoard(board.context, board.canvasW, board.canvasH);
     const position = JSON.parse(message.text);
+
     board.drawRect(board.context, position.x, position.y, position.w, position.h);
 
     if (message.messageType === 'IMAGE') {

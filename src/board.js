@@ -28,6 +28,7 @@ export class BoardWebClient {
     this.preRect = {};
     this.opts = {};
     this.observerMap = {};
+    this.timer = null;
     Object.assign(this.opts, options);
 
     this.canvasW = options.canvasW;
@@ -96,7 +97,15 @@ export class BoardWebClient {
         const h = offsetY-startPoint.y;
         this.clearBoard(this.context, this.canvasW, this.canvasH);
         this.drawRect(this.context, startPoint.x, startPoint.y, w, h);
-        this.observerMap['move']({ x: startPoint.x, y: startPoint.y, w, h });
+
+        if (this.timer) {
+          clearTimeout(this.timer);
+        }
+
+        this.timer = setTimeout(() => {
+          this.observerMap['move']({ x: startPoint.x, y: startPoint.y, w, h });
+        }, 16);
+        
         this.endPoint = { w, h }
       }
     })
