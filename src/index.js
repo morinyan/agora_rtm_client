@@ -2,6 +2,7 @@ import './assets/styles.css'
 import * as $ from 'jquery'
 import * as M from 'materialize-css'
 
+import BoardWebClient from './board'
 import RtmClient from './rtm-client'
 import {
   Toast,
@@ -15,6 +16,23 @@ $(() => {
   M.AutoInit()
 
   const rtm = new RtmClient()
+
+  const BoardBox = document.querySelector('#board_box');
+  const board = new BoardWebClient({
+    $el: BoardBox,
+    canvasW: BoardBox.clientWidth,
+    canvasH: BoardBox.clientHeight,
+  })
+
+  window.board = board;
+
+  board.observer({
+    'move': (args) => {
+      const params = serializeFormData('loginForm')
+      console.log('observer::', { args, params });
+      rtm.client.sendMessageToPeer({ text: JSON.stringify(args) }, params.accountName === 'test_123' ? 'test_789': 'test_123');
+    }
+  })
 
   rtm.on('ConnectionStateChanged', (newState, reason) => {
     console.log('reason', reason)
@@ -34,6 +52,11 @@ $(() => {
   })
 
   rtm.on('MessageFromPeer', async (message, peerId) => {
+    console.log('MessageFromPeer::', { message, peerId });
+    board.clearBoard(board.context, board.canvasW, board.canvasH);
+    const position = JSON.parse(message.text);
+    board.drawRect(board.context, position.x, position.y, position.w, position.h);
+
     if (message.messageType === 'IMAGE') {
       const blob = await rtm.client.downloadMedia(message.mediaId)
       blobToImage(blob, (image) => {
