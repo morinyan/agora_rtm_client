@@ -2,14 +2,14 @@ const RtmTokenBuilder = require('./RtmTokenBuilder').RtmTokenBuilder;
 const RtmRole = require('./RtmTokenBuilder').Role;
 const Priviledges = require('./AccessToken').priviledges;
 const appID  = "d0f75f9c230446a1bff5353aa382b427";
-const appCertificate = "516828328b494b3f85ede0a80e59cd7a";
+const appCertificate = "";
 
 const accountList = [
     'test_123',
     'test_345',
     'test_456',
     'test_789',
-]
+];
 
 const expirationTimeInSeconds = 3600 * 24;
 const currentTimestamp = Math.floor(Date.now() / 1000)
