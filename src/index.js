@@ -27,6 +27,7 @@ $(() => {
       'memberId': '',
       'width': 600,
       'height': 500,
+      'border': '1px solid red',
     },
     {
       'appId': 'd0f75f9c230446a1bff5353aa382b427',
@@ -39,6 +40,7 @@ $(() => {
       'memberId': '',
       'width': 480,
       'height': 400,
+      'border': '1px solid blue'
     }
   ];
 
@@ -66,10 +68,12 @@ $(() => {
   const rtm = new RtmClient()
 
   const BoardBox = document.querySelector('#board_box');
+  console.log('JSON::', JSON.stringify(inputData))
 
   Object.assign(BoardBox.style, {
     width: inputData.width,
     height: inputData.height,
+    border: inputData.border,
   });
 
   const board = new BoardWebClient({
@@ -110,7 +114,10 @@ $(() => {
     board.clearBoard(board.context, board.canvasW, board.canvasH);
     const position = JSON.parse(message.text);
 
-    board.drawRect(board.context, position.x, position.y, position.w, position.h);
+    const xR = inputData.width/position.width;
+    const yR = inputData.height/position.height;
+
+    board.drawRect(board.context, position.x * xR, position.y * yR, position.w *xR, position.h * yR);
 
     if (message.messageType === 'IMAGE') {
       const blob = await rtm.client.downloadMedia(message.mediaId)
