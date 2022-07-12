@@ -19,7 +19,7 @@ $(() => {
     {
       'appId': 'd0f75f9c230446a1bff5353aa382b427',
       'accountName': 'test_123',
-      'token': '006d0f75f9c230446a1bff5353aa382b427IAAfcVw5/7f9q8GUBHFUvR4xHlIRVkJL2bSpX14kN8ZUYBW/NfEAAAAAEADvbzn5hP/MYgEA6AOE/8xi',
+      'token': '006d0f75f9c230446a1bff5353aa382b427IAAduoE0Z7iwege6DLWXWPgt8phoIZ0PgvLvkV3E1Ei02RW/NfEAAAAAEABr0xhkGm3OYgEA6AMabc5i',
       'channelName': '1018011',
       'channelMessage': 'ping by test_123',
       'peerId': 'test_789',
@@ -32,7 +32,7 @@ $(() => {
     {
       'appId': 'd0f75f9c230446a1bff5353aa382b427',
       'accountName': 'test_789',
-      'token': '006d0f75f9c230446a1bff5353aa382b427IACHlvd0d8mrEDkYB9sxGl36K4IqF5PeB0aKpzlOCDjiWDPCgu8AAAAAEAAl8JqQgv7MYgEA6AOC/sxi',
+      'token': '006d0f75f9c230446a1bff5353aa382b427IACZyvrxC4n31MjSjm3Fs11KFks/3yA48S5mxa0db+RvrDPCgu8AAAAAEABr0xhkGm3OYgEA6AMabc5i',
       'channelName': '1018011',
       'channelMessage': 'ping by test_789',
       'peerId': 'test_123',
@@ -84,11 +84,20 @@ $(() => {
 
   window.board = board;
 
+  board.mousedown.add()
+
+  // 监听画板
   board.observer({
-    'move': (args) => {
+    'mousedown': (args) => {
+      console.log('业务:mousedown:', args);
+    },
+    'mousemove': (args) => {
       const params = serializeFormData('loginForm')
       console.log('observer::', { args, params });
       rtm.client.sendMessageToPeer({ text: JSON.stringify({width: inputData.width, height: inputData.height, ...args}) }, params.peerId);
+    },
+    'mouseup': (args) => {
+      console.log('业务:mouseup', args);
     }
   })
 
@@ -110,14 +119,9 @@ $(() => {
   })
 
   rtm.on('MessageFromPeer', async (message, peerId) => {
-    console.log('MessageFromPeer::', { message, peerId });
-    board.clearBoard(board.context, board.canvasW, board.canvasH);
-    const position = JSON.parse(message.text);
 
-    const xR = inputData.width/position.width;
-    const yR = inputData.height/position.height;
-
-    board.drawRect(board.context, position.x * xR, position.y * yR, position.w *xR, position.h * yR);
+    // 监听RTM消息
+    board.bindMessageFromPeer(message, peerId);
 
     if (message.messageType === 'IMAGE') {
       const blob = await rtm.client.downloadMedia(message.mediaId)

@@ -4,17 +4,6 @@ const CANVAS_STYLE = {
 };
 
 export class BoardWebClient {
-  // canvas = null;
-  // context = null;
-  // isDown = false;
-  // canvasW = 300;
-  // canvasH = 150;
-  // startPoint = {};
-  // endPoint = {};
-  // strokeStyle = 'blue';
-  // lintWidth = 2;
-  // preRect = {};
-
   constructor(options = {}) {
     this.canvas = null;
     this.context = null;
@@ -65,10 +54,6 @@ export class BoardWebClient {
     }
   }
 
-  observer(map) {
-    Object.assign(this.observerMap, map);
-  }
-
   drawRect(ctx, x, y, w, h) {
     ctx.beginPath();
     ctx.rect(x, y, w, h);
@@ -87,10 +72,17 @@ export class BoardWebClient {
     canvas.addEventListener('mousedown', e => {
       this.startPoint = { x: e.offsetX, y: e.offsetY }
       this.isDown = true;
+
+      const mousedownHook = this.observerMap['mousedown'];
+
+      if (typeof mousedownHook === 'function') {
+        mousedownHook(this.startPoint);
+      }
     })
   
     canvas.addEventListener('mousemove', e => {
       const { startPoint } = this;
+
       if (this.isDown) {
         const { offsetX, offsetY } = e;
         const w = offsetX-startPoint.x;
@@ -98,13 +90,17 @@ export class BoardWebClient {
         this.clearBoard(this.context, this.canvasW, this.canvasH);
         this.drawRect(this.context, startPoint.x, startPoint.y, w, h);
 
-        if (this.timer) {
-          clearTimeout(this.timer);
-        }
+        const mousemoveHook = this.observerMap['mousemove'];
 
-        this.timer = setTimeout(() => {
-          this.observerMap['move']({ x: startPoint.x, y: startPoint.y, w, h });
-        }, 16);
+        if (typeof mousemoveHook === 'function') {
+          if (this.timer) {
+            clearTimeout(this.timer);
+          }
+  
+          this.timer = setTimeout(() => {
+            mousemoveHook({ x: startPoint.x, y: startPoint.y, w, h });
+          }, 16);
+        }
         
         this.endPoint = { w, h }
       }
@@ -115,10 +111,40 @@ export class BoardWebClient {
       if(this.isDown) {
         this.clearBoard(this.context, this.canvasW, this.canvasH);
         this.drawRect(this.context, startPoint.x, startPoint.y, endPoint.w, endPoint.h);
-        this.startPoint = { x: e.offsetX, y: e.offsetY };
       }
       this.isDown = false;
+
+      const mouseupHook = this.observerMap['mouseup'];
+
+      if (typeof mouseupHook === 'function') {
+        mouseupHook({ x: e.offsetX, y: e.offsetY });
+      }
     })
+  }
+
+  /**
+   * 监听RTM消息
+   * @param {String} message RTM接收的消息内容
+   * @param {String} peerId RTM接收的发送消息的userID
+   */
+  bindMessageFromPeer(message, peerId) {
+    console.log('MessageFromPeer::', { message, peerId });
+    const position = JSON.parse(message.text);
+
+    this.clearBoard(this.context, this.canvasW, this.canvasH);
+
+    const xR = this.canvasW / position.width;
+    const yR = this.canvasH / position.height;
+
+    this.drawRect(this.context, position.x * xR, position.y * yR, position.w *xR, position.h * yR);
+  }
+
+  /**
+   * 监听画板point变化
+   * @param {Object} map 
+   */
+  observer(map) {
+    Object.assign(this.observerMap, map);
   }
   
 }
