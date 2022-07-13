@@ -1,8 +1,10 @@
+// 导入certificate
+const { appCertificate } = require('../.agoraconfig.js');
+
 const RtmTokenBuilder = require('./RtmTokenBuilder').RtmTokenBuilder;
 const RtmRole = require('./RtmTokenBuilder').Role;
 const Priviledges = require('./AccessToken').priviledges;
 const appID  = "d0f75f9c230446a1bff5353aa382b427";
-const appCertificate = "";
 
 const accountList = [
     'test_123',

@@ -12,7 +12,7 @@ export class BoardWebClient {
     this.canvasH = 150;
     this.startPoint = {};
     this.endPoint = {};
-    this.strokeStyle = 'blue';
+    this.strokeStyle = 'black';
     this.lintWidth = 2;
     this.preRect = {};
     this.opts = {};
@@ -27,28 +27,29 @@ export class BoardWebClient {
   }
 
   init() {
-    const { canvasH, canvasW } = this;
+    const { canvasH, canvasW, opts } = this;
 
-    this.canvas = document.createElement('canvas');
-    this.context = this.canvas.getContext('2d');
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+    // css style
+    Object.assign(canvas.style, CANVAS_STYLE);
 
-    this.canvas.width = canvasW;
-    this.canvas.height = canvasH;
+    this.canvas = canvas;
+    this.context = canvas.getContext('2d');
 
-    Object.assign(this.canvas.style, CANVAS_STYLE);
-
-    // events
-    this.bindEventHandle();
-
-    // render
-    this.render();
+    this.bindBoardEventHandler(canvas);
+    this.render(opts.$el, canvas);
   }
 
-  render() {
-    const { $el } = this.opts;
-
-    if ($el instanceof Element) {
-      $el.appendChild(this.canvas);
+  /**
+   * 渲染board到Web页面容器
+   * @param {Element} el DOM元素
+   * @param {Element} canvas 创建的Canvas元素
+   */
+  render(el, canvas) {
+    if (el instanceof Element) {
+      el.appendChild(canvas);
     } else {
       console.error('$el Not Element');
     }
@@ -56,9 +57,8 @@ export class BoardWebClient {
 
   drawRect(ctx, x, y, w, h) {
     ctx.beginPath();
-    ctx.rect(x, y, w, h);
     ctx.strokeStyle = this.strokeStyle;
-    ctx.stroke();
+    ctx.strokeRect(x, y, w, h);
     ctx.closePath();
   }
 
@@ -66,10 +66,14 @@ export class BoardWebClient {
     ctx.clearRect(0, 0, w, h);
   }
 
-  bindEventHandle() {
-    const { canvas } = this;
+  /**
+   * 画板事件绑定
+   * @param {Element} canvas 
+   */
+  bindBoardEventHandler(canvas) {
+    const { bindEvent } = this;
 
-    canvas.addEventListener('mousedown', e => {
+    bindEvent(canvas,'mousedown', e => {
       this.startPoint = { x: e.offsetX, y: e.offsetY }
       this.isDown = true;
 
@@ -80,7 +84,7 @@ export class BoardWebClient {
       }
     })
   
-    canvas.addEventListener('mousemove', e => {
+    bindEvent(canvas, 'mousemove', e => {
       const { startPoint } = this;
 
       if (this.isDown) {
@@ -106,7 +110,7 @@ export class BoardWebClient {
       }
     })
   
-    window.addEventListener('mouseup', e => {
+    bindEvent(window, 'mouseup', e => {
       const { startPoint, endPoint } = this;
       if(this.isDown) {
         this.clearBoard(this.context, this.canvasW, this.canvasH);
@@ -120,6 +124,11 @@ export class BoardWebClient {
         mouseupHook({ x: e.offsetX, y: e.offsetY });
       }
     })
+  }
+
+  // bind event
+  bindEvent(el, event, callback) {
+    el.addEventListener(event, callback);
   }
 
   /**
@@ -140,8 +149,8 @@ export class BoardWebClient {
   }
 
   /**
-   * 监听画板point变化
-   * @param {Object} map 
+   * 监听画板事件
+   * @param {Object} map 事件映射
    */
   observer(map) {
     Object.assign(this.observerMap, map);
