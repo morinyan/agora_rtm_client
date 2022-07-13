@@ -18,6 +18,8 @@ export class BoardWebClient {
     this.opts = {}
     this.observerMap = {}
     this.timer = null
+    this.clearBoardTime = 10000
+    this.frameTime = 16
     Object.assign(this.opts, options)
 
     this.canvasW = options.canvasW
@@ -77,11 +79,9 @@ export class BoardWebClient {
       this.startPoint = { x: e.offsetX, y: e.offsetY }
       this.isDown = true
 
-      const mousedownHook = this.observerMap['mousedown']
+      const hook = this.getHook('mousedown')
+      hook(this.startPoint)
 
-      if (typeof mousedownHook === 'function') {
-        mousedownHook(this.startPoint)
-      }
     })
   
     bindEvent(canvas, 'mousemove', e => {
@@ -94,17 +94,10 @@ export class BoardWebClient {
         this.clearBoard(this.context, this.canvasW, this.canvasH)
         this.drawRect(this.context, startPoint.x, startPoint.y, w, h)
 
-        const mousemoveHook = this.observerMap['mousemove']
-
-        if (typeof mousemoveHook === 'function') {
-          if (this.timer) {
-            clearTimeout(this.timer)
-          }
-  
-          this.timer = setTimeout(() => {
-            mousemoveHook({ x: startPoint.x, y: startPoint.y, w, h })
-          }, 16)
-        }
+        const hook = this.getHook('mousemove')
+        this.debounce(() => {
+          hook({ x: startPoint.x, y: startPoint.y, w, h })
+        })
         
         this.endPoint = { w, h }
       }
@@ -118,17 +111,16 @@ export class BoardWebClient {
       }
       this.isDown = false
 
-      const mouseupHook = this.observerMap['mouseup']
+      const hook = this.getHook('mouseup')
+      hook({ x: e.offsetX, y: e.offsetY })
 
-      if (typeof mouseupHook === 'function') {
-        mouseupHook({ x: e.offsetX, y: e.offsetY })
-      }
+      this.debounce(() => {
+        if (!this.isDown) {
+          this.clearBoard(this.context, this.canvasW, this.canvasH)
+        }
+      }, this.clearBoardTime);
+
     })
-  }
-
-  // bind event
-  bindEvent(el, event, callback) {
-    el.addEventListener(event, callback)
   }
 
   /**
@@ -155,7 +147,25 @@ export class BoardWebClient {
   observer(map) {
     Object.assign(this.observerMap, map)
   }
-  
+
+  // bind event
+  bindEvent(el, event, callback) {
+    el.addEventListener(event, callback)
+  }
+
+  // 获取hook
+  getHook(name) {
+    return this.observerMap[name] || (() => {})
+  }
+
+  debounce(fn, t = 16) {
+    if (this.timer) {
+      clearTimeout(this.timer)
+      this.timer = null
+    }
+
+    this.timer = setTimeout(fn, t)
+  }
 }
 
 export default BoardWebClient

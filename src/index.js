@@ -80,21 +80,6 @@ $(() => {
 
   window.board = board
 
-  // 监听画板
-  board.observer({
-    'mousedown': (args) => {
-      console.log('业务:mousedown:', args)
-    },
-    'mousemove': (args) => {
-      const params = serializeFormData('loginForm')
-      console.log('observer::', { args, params })
-      rtm.client.sendMessageToPeer({ text: JSON.stringify({width: inputData.width, height: inputData.height, ...args}) }, params.peerId)
-    },
-    'mouseup': (args) => {
-      console.log('业务:mouseup', args)
-    }
-  })
-
   rtm.on('ConnectionStateChanged', (newState, reason) => {
     console.log('reason', reason)
     const view = $('<div/>', {
@@ -195,6 +180,22 @@ $(() => {
         console.log('login')
         rtm._logined = true
         Toast.notice('Login: ' + params.accountName, ' token: ', params.token)
+
+        // 登录成功，启动画板监听
+        board.observer({
+          'mousedown': (args) => {
+            console.log('业务:mousedown:', args)
+          },
+          'mousemove': (args) => {
+            const params = serializeFormData('loginForm')
+            console.log('observer::', { args, params })
+            rtm.client.sendMessageToPeer({ text: JSON.stringify({width: inputData.width, height: inputData.height, ...args}) }, params.peerId)
+          },
+          'mouseup': (args) => {
+            console.log('业务:mouseup', args)
+          }
+        })
+
       }).catch((err) => {
         console.log(err)
       })
