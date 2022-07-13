@@ -99,8 +99,14 @@ $(() => {
 
   rtm.on('MessageFromPeer', async (message, peerId) => {
 
-    // 监听RTM消息
-    board.bindMessageFromPeer(message, peerId)
+    try {
+      console.log('##,', message)
+      const pointData = JSON.parse(message.text)
+      // 监听RTM消息
+      board.bindMessageFromPeer(pointData, peerId)
+    } catch (error) {
+      console.log(error)
+    }
 
     if (message.messageType === 'IMAGE') {
       const blob = await rtm.client.downloadMedia(message.mediaId)
@@ -189,11 +195,18 @@ $(() => {
           'mousemove': (args) => {
             const params = serializeFormData('loginForm')
             console.log('observer::', { args, params })
-            rtm.client.sendMessageToPeer({ text: JSON.stringify({width: inputData.width, height: inputData.height, ...args}) }, params.peerId)
+            rtm.client.sendMessageToPeer({ text: JSON.stringify({ type: 'RECT', position: {width: inputData.width, height: inputData.height, ...args} }) }, params.peerId)
           },
           'mouseup': (args) => {
             console.log('业务:mouseup', args)
-          }
+          },
+          'custom': (args) => {
+            console.log('自定义事件:', args)
+            if (args.type === 'CLEAR') {
+              // board.clearBoard(board.context, board.canvasW, board.canvasH)
+              rtm.client.sendMessageToPeer({ text: JSON.stringify({ type: 'CLEAR', position: {width: inputData.width, height: inputData.height, ...args} }) }, params.peerId)
+            }
+          },
         })
 
       }).catch((err) => {

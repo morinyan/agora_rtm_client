@@ -117,6 +117,10 @@ export class BoardWebClient {
       this.debounce(() => {
         if (!this.isDown) {
           this.clearBoard(this.context, this.canvasW, this.canvasH)
+          this.getHook('custom')({
+            type: 'CLEAR',
+            data: {},
+          })
         }
       }, this.clearBoardTime);
 
@@ -128,16 +132,24 @@ export class BoardWebClient {
    * @param {String} message RTM接收的消息内容
    * @param {String} peerId RTM接收的发送消息的userID
    */
-  bindMessageFromPeer(message, peerId) {
-    console.log('MessageFromPeer::', { message, peerId })
-    const position = JSON.parse(message.text)
+  bindMessageFromPeer(data, peerId) {
+    const pos = data.position
+    const { context, canvasW, canvasH } = this
 
-    this.clearBoard(this.context, this.canvasW, this.canvasH)
+    if (data.type === 'RECT') {
 
-    const xR = this.canvasW / position.width
-    const yR = this.canvasH / position.height
+      this.clearBoard(context, canvasW, canvasH)
 
-    this.drawRect(this.context, position.x * xR, position.y * yR, position.w *xR, position.h * yR)
+      const xR = canvasW / pos.width
+      const yR = canvasH / pos.height
+
+      this.drawRect(context, pos.x * xR, pos.y * yR, pos.w *xR, pos.h * yR)
+    
+    }
+
+    if (data.type === 'CLEAR') {
+      this.clearBoard(context, canvasW, canvasH)
+    }
   }
 
   /**
@@ -148,7 +160,6 @@ export class BoardWebClient {
     Object.assign(this.observerMap, map)
   }
 
-  // bind event
   bindEvent(el, event, callback) {
     el.addEventListener(event, callback)
   }
