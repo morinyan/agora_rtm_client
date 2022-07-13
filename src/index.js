@@ -42,39 +42,35 @@ $(() => {
       'height': 400,
       'border': '1px solid blue'
     }
-  ];
+  ]
 
   let searchList = new URL(location.href).search.slice(1).split('&').map(s => s.split('='))
-
-  let inputData = [];
+  let inputs = [...document.querySelectorAll('input[name]')]
+  let inputData = []
 
   for(let item of searchList) {
     if (item[0] === 'number') {
-      inputData = dataList[item[1]] || [];
+      inputData = dataList[item[1]] || []
     }
   }
-
-  let inputs = [...document.querySelectorAll('input[name]')];
 
   for(let key in inputData) {
     for(let dom of inputs) {
       if (dom.name === key) {
-        dom.value = inputData[key];
-        break;
+        dom.value = inputData[key]
+        break
       }
     }
   }
 
   const rtm = new RtmClient()
 
-  const BoardBox = document.querySelector('#board_box');
-  console.log('JSON::', JSON.stringify(inputData))
-
+  const BoardBox = document.querySelector('#board_box')
   Object.assign(BoardBox.style, {
     width: inputData.width,
     height: inputData.height,
     border: inputData.border,
-  });
+  })
 
   const board = new BoardWebClient({
     $el: BoardBox,
@@ -82,22 +78,20 @@ $(() => {
     canvasH: inputData.height,
   })
 
-  window.board = board;
-
-  board.mousedown.add()
+  window.board = board
 
   // 监听画板
   board.observer({
     'mousedown': (args) => {
-      console.log('业务:mousedown:', args);
+      console.log('业务:mousedown:', args)
     },
     'mousemove': (args) => {
       const params = serializeFormData('loginForm')
-      console.log('observer::', { args, params });
-      rtm.client.sendMessageToPeer({ text: JSON.stringify({width: inputData.width, height: inputData.height, ...args}) }, params.peerId);
+      console.log('observer::', { args, params })
+      rtm.client.sendMessageToPeer({ text: JSON.stringify({width: inputData.width, height: inputData.height, ...args}) }, params.peerId)
     },
     'mouseup': (args) => {
-      console.log('业务:mouseup', args);
+      console.log('业务:mouseup', args)
     }
   })
 
@@ -121,7 +115,7 @@ $(() => {
   rtm.on('MessageFromPeer', async (message, peerId) => {
 
     // 监听RTM消息
-    board.bindMessageFromPeer(message, peerId);
+    board.bindMessageFromPeer(message, peerId)
 
     if (message.messageType === 'IMAGE') {
       const blob = await rtm.client.downloadMedia(message.mediaId)
