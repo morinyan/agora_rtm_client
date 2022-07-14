@@ -72,8 +72,18 @@ $(() => {
     border: inputData.border,
   })
 
+  const canvas = document.createElement('canvas')
+  canvas.width = inputData.width
+  canvas.height = inputData.height
+  Object.assign(canvas.style, {
+    'width': '100%',
+    'height': '100%',
+  })
+
+  BoardBox.appendChild(canvas)
+
   const board = new BoardWebClient({
-    $el: BoardBox,
+    canvas,
     canvasW: inputData.width,
     canvasH: inputData.height,
   })

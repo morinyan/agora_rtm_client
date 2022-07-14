@@ -25,23 +25,34 @@ export class BoardWebClient {
     this.canvasW = options.canvasW
     this.canvasH = options.canvasH
     
-    this.init()
+    this.init(options.canvas)
   }
 
-  init() {
-    const { canvasH, canvasW, opts } = this
+  init(canvas) {
+    const { opts } = this
+    let _canvas = null;
 
+    if (!canvas) {
+      _canvas = this.createCanvas()
+      this.render(opts.$el, _canvas)
+    } else {
+      _canvas = canvas
+    }
+
+    this.canvas = _canvas
+    this.context = _canvas.getContext('2d')
+
+    this.bindBoardEventHandler(_canvas)
+  }
+
+  createCanvas() {
+    const { canvasH, canvasW } = this
     const canvas = document.createElement('canvas')
     canvas.width = canvasW
     canvas.height = canvasH
     // css style
     Object.assign(canvas.style, CANVAS_STYLE)
-
-    this.canvas = canvas
-    this.context = canvas.getContext('2d')
-
-    this.bindBoardEventHandler(canvas)
-    this.render(opts.$el, canvas)
+    return canvas
   }
 
   /**
