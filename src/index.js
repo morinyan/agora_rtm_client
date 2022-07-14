@@ -211,6 +211,7 @@ $(() => {
             console.log('业务:mouseup', args)
           },
           'custom': (args) => {
+            const params = serializeFormData('loginForm')
             console.log('自定义事件:', args)
             if (args.type === 'CLEAR') {
               // board.clearBoard(board.context, board.canvasW, board.canvasH)
